@@ -2,7 +2,6 @@ name: Daily Class Upload - 9 AM IST
 
 on:
   schedule:
-    # 9 AM IST = 3:30 AM UTC
     - cron: '30 3 * * *'
   workflow_dispatch:
 
@@ -33,11 +32,9 @@ jobs:
       
       - name: Get counter and upload files
         run: |
-          # Read current counter
-          COUNTER=$(cat .github/workflows/upload-counter.txt)
+          COUNTER=$(cat .github/workflows/upload-counter.txt 2>/dev/null || echo "0")
           COUNTER=$((COUNTER + 1))
           
-          # Define all files in order (29 total files = 15 days approximately)
           FILES=(
             "src/main/java/com/demo_bank_v1/config/AppConfig.java"
             "src/main/java/com/demo_bank_v1/config/MailConfig.java"
@@ -70,13 +67,9 @@ jobs:
             "src/main/java/com/demo_bank_v1/rest_controllers/RestTransactApiController.java"
           )
           
-          # Calculate which 2 files to upload today
           INDEX=$((($COUNTER - 1) * 2))
-          
-          # Create daily upload folder
           mkdir -p daily-uploads/day-$COUNTER
           
-          # Copy first file if exists
           if [ $INDEX -lt ${#FILES[@]} ]; then
             FILE="${FILES[$INDEX]}"
             if [ -f "$FILE" ]; then
@@ -85,7 +78,6 @@ jobs:
             fi
           fi
           
-          # Copy second file if exists
           if [ $((INDEX + 1)) -lt ${#FILES[@]} ]; then
             FILE="${FILES[$((INDEX + 1))]}"
             if [ -f "$FILE" ]; then
@@ -94,12 +86,6 @@ jobs:
             fi
           fi
           
-          # If we've uploaded all files, stop
-          if [ $INDEX -ge $((${#FILES[@]} - 1)) ]; then
-            echo " All files uploaded! Total days: $COUNTER"
-          fi
-          
-          # Update counter
           echo $COUNTER > .github/workflows/upload-counter.txt
       
       - name: Commit and Push

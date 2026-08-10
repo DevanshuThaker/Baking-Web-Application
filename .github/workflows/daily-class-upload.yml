@@ -1,1 +1,109 @@
+name: Daily Class Upload - 9 AM IST
 
+on:
+  schedule:
+    # 9 AM IST = 3:30 AM UTC
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  upload-classes:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Configure Git
+        run: |
+          git config --local user.email "devanshu.thaker.2002@gmail.com"
+          git config --local user.name "DevanshuThaker"
+      
+      - name: Initialize counter file
+        run: |
+          mkdir -p .github/workflows
+          if [ ! -f .github/workflows/upload-counter.txt ]; then
+            echo "0" > .github/workflows/upload-counter.txt
+            git add .github/workflows/upload-counter.txt
+            git commit -m "Initialize upload counter" || true
+            git push origin main || true
+          fi
+      
+      - name: Get counter and upload files
+        run: |
+          # Read current counter
+          COUNTER=$(cat .github/workflows/upload-counter.txt)
+          COUNTER=$((COUNTER + 1))
+          
+          # Define all files in order (29 total files = 15 days approximately)
+          FILES=(
+            "src/main/java/com/demo_bank_v1/config/AppConfig.java"
+            "src/main/java/com/demo_bank_v1/config/MailConfig.java"
+            "src/main/java/com/demo_bank_v1/controler_advisor/AdvisorController.java"
+            "src/main/java/com/demo_bank_v1/controllers/AccountController.java"
+            "src/main/java/com/demo_bank_v1/controllers/AppController.java"
+            "src/main/java/com/demo_bank_v1/controllers/AuthController.java"
+            "src/main/java/com/demo_bank_v1/controllers/IndexController.java"
+            "src/main/java/com/demo_bank_v1/controllers/RegisterController.java"
+            "src/main/java/com/demo_bank_v1/controllers/TransactController.java"
+            "src/main/java/com/demo_bank_v1/DemoBankV1Application.java"
+            "src/main/java/com/demo_bank_v1/helpers/GenAccountNumber.java"
+            "src/main/java/com/demo_bank_v1/helpers/HTML.java"
+            "src/main/java/com/demo_bank_v1/helpers/Token.java"
+            "src/main/java/com/demo_bank_v1/interceptors/AppInterceptor.java"
+            "src/main/java/com/demo_bank_v1/mailMessenger/MailMessenger.java"
+            "src/main/java/com/demo_bank_v1/models/Account.java"
+            "src/main/java/com/demo_bank_v1/models/Payment.java"
+            "src/main/java/com/demo_bank_v1/models/PaymentHistory.java"
+            "src/main/java/com/demo_bank_v1/models/Transact.java"
+            "src/main/java/com/demo_bank_v1/models/TransactionHistory.java"
+            "src/main/java/com/demo_bank_v1/models/User.java"
+            "src/main/java/com/demo_bank_v1/repository/AccountRepository.java"
+            "src/main/java/com/demo_bank_v1/repository/PaymentHistoryRepository.java"
+            "src/main/java/com/demo_bank_v1/repository/PaymentRepository.java"
+            "src/main/java/com/demo_bank_v1/repository/TransactHistoryRepository.java"
+            "src/main/java/com/demo_bank_v1/repository/TransactRepository.java"
+            "src/main/java/com/demo_bank_v1/repository/UserRepository.java"
+            "src/main/java/com/demo_bank_v1/rest_controllers/RestAuthApiController.java"
+            "src/main/java/com/demo_bank_v1/rest_controllers/RestTransactApiController.java"
+          )
+          
+          # Calculate which 2 files to upload today
+          INDEX=$((($COUNTER - 1) * 2))
+          
+          # Create daily upload folder
+          mkdir -p daily-uploads/day-$COUNTER
+          
+          # Copy first file if exists
+          if [ $INDEX -lt ${#FILES[@]} ]; then
+            FILE="${FILES[$INDEX]}"
+            if [ -f "$FILE" ]; then
+              cp "$FILE" daily-uploads/day-$COUNTER/
+              echo " Copied: $FILE"
+            fi
+          fi
+          
+          # Copy second file if exists
+          if [ $((INDEX + 1)) -lt ${#FILES[@]} ]; then
+            FILE="${FILES[$((INDEX + 1))]}"
+            if [ -f "$FILE" ]; then
+              cp "$FILE" daily-uploads/day-$COUNTER/
+              echo " Copied: $FILE"
+            fi
+          fi
+          
+          # If we've uploaded all files, stop
+          if [ $INDEX -ge $((${#FILES[@]} - 1)) ]; then
+            echo " All files uploaded! Total days: $COUNTER"
+          fi
+          
+          # Update counter
+          echo $COUNTER > .github/workflows/upload-counter.txt
+      
+      - name: Commit and Push
+        run: |
+          git add .github/workflows/upload-counter.txt daily-uploads/
+          git commit -m "Daily upload - Day $(cat .github/workflows/upload-counter.txt) - $(date +'%Y-%m-%d') - 2 Java files" || echo "No changes to commit"
+          git push origin main

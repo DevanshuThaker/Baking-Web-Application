@@ -18,11 +18,11 @@ public class MailConfig {
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.debug", "true");
 
-        // Set Mail Credentials:
-        emailConfig.setHost("localhost");
-        emailConfig.setPort(25);
-        emailConfig.setUsername("no-reply@somecompany.com");
-        emailConfig.setPassword("password123");
+        // Set Mail Credentials for Gmail SMTP:
+        emailConfig.setHost("smtp.gmail.com");
+        emailConfig.setPort(587);
+        emailConfig.setUsername("devanshu.thaker.2002@gmail.com");
+        emailConfig.setPassword("qayivcvucbkfrded"); // Replace with the App Password you generate
 
         return emailConfig;
     }

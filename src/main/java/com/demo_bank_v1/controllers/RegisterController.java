@@ -18,10 +18,13 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.mail.MessagingException;
 import javax.validation.Valid;
 import java.util.Random;
+import com.demo_bank_v1.mailMessenger.MailMessenger;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 public class RegisterController {
-
+    @Autowired
+    private MailMessenger mailMessenger;
     @Autowired
     private UserRepository userRepository;
 
@@ -73,8 +76,7 @@ public class RegisterController {
         userRepository.registerUser(first_name, last_name, email, hashed_password, token, code);
 
         // TODO: SEND EMAIL NOTIFICATION:
-        MailMessenger.htmlEmailMessenger("no-reply@somecompany.com", email, "Verify Account", emailBody);
-
+        mailMessenger.htmlEmailMessenger("no-reply@somecompany.com", email, "Verify Account", emailBody);
         // TODO: RETURN TO REGISTER PAGE:
         String successMessage = "Account Registered Successfully, Please Check your Email and Verify Account!";
         registrationPage.addObject("success", successMessage);
